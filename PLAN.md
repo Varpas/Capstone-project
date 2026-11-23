@@ -29,7 +29,7 @@ Login/auth → catalogue (category → brands → products with tentative delive
 
 ## 3. Data Model (draft)
 
-> Superseded by [`docs/data-model.md`](docs/data-model.md), which was refined from the wireframes in phase 1. The table below is the initial draft.
+> Superseded by [`docs/frontend-requirements.md`](docs/frontend-requirements.md), which was refined from the wireframes in phase 1. The table below is the initial draft.
 
 | Entity | Key fields |
 |---|---|
@@ -64,7 +64,7 @@ Order status: `PLACED → PAID → CANCELLED` (cancel allowed only within 48 hrs
 | # | Phase | Tasks | Output |
 |---|---|---|---|
 | 0 | Setup | Get IBM Bob access, install it, install JDK, Maven and PostgreSQL, create a GitHub repo, join the Slack channel | Working environment |
-| 1 | Analyze wireframes | Review slides 5–10, list entities and features, finalize the data model (manual) | `docs/data-model.md` |
+| 1 | Analyze wireframes | Review slides 5–10, list entities and features, finalize the data model (manual) | `docs/frontend-requirements.md` |
 | 2 | OpenAPI spec | Prompt Bob with wireframes and entities, review and edit the spec | `openapi.yaml` |
 | 3 | Generate Spring Boot code | Prompt Bob with the spec (Java version, PostgreSQL, Spring Web/Data JPA/Security/Validation, Flyway) | `backend/` skeleton: controllers, services, repositories, entities |
 | 4 | Database | Create the DB, set `application.properties`, add Flyway migrations and seed data (categories, brands, ~30 books) | Schema and seed data |

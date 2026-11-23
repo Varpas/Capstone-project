@@ -21,11 +21,12 @@ points, simulated payment, confirmation, order history, "Buy it again", and canc
 Capstone-project/
 ├── backend/             Spring Boot 3 (Java 17, Maven), see backend/README.md
 ├── frontend/            React 18 + Vite + Tailwind CSS, see frontend/README.md
-├── docs/                requirements.md, data-model.md, openapi.yaml
+├── docs/                backend-requirements.md, frontend-requirements.md, openapi.yaml, api-guide.md, testing.md, demo-script.md
+├── scripts/             smoke-test.sh: end-to-end checks against a running server
 ├── docker-compose.yml   PostgreSQL + backend + frontend
 ├── redocly.yaml         OpenAPI lint rules for docs/openapi.yaml
 ├── PLAN.md              Original capstone plan and phases
-└── Slide-5.png … Slide-10.png   Wireframes the UI and data model are based on
+└── recources/           Slide-5.png … Slide-10.png, the wireframes the UI and data model are based on
 ```
 
 ## Running the application
@@ -151,9 +152,12 @@ changed in any real deployment. Deploying to ROSA/ROKS was optional in the capst
 | Document | Content |
 |---|---|
 | [`PLAN.md`](PLAN.md) | Capstone requirements, assumptions, execution phases 0–12, risks and definition of done |
-| [`docs/requirements.md`](docs/requirements.md) | Reverse-engineered functional and non-functional requirements, user stories, domain boundaries, backend modules and a journey-to-requirements traceability table |
-| [`docs/data-model.md`](docs/data-model.md) | Wireframe analysis, features, ER diagram, PostgreSQL tables and business rules |
+| [`docs/backend-requirements.md`](docs/backend-requirements.md) | Reverse-engineered functional and non-functional requirements, user stories, domain boundaries, backend modules and a journey-to-requirements traceability table |
+| [`docs/frontend-requirements.md`](docs/frontend-requirements.md) | Wireframe analysis, features, ER diagram, PostgreSQL tables and business rules |
 | [`docs/openapi.yaml`](docs/openapi.yaml) | OpenAPI 3.0.3 specification of the REST API |
+| [`docs/api-guide.md`](docs/api-guide.md) | Readable API guide: every endpoint, worked request and response examples, pricing and business rules, validation rules per field, the error catalogue and the order state machine |
+| [`docs/testing.md`](docs/testing.md) | Test strategy, what each test covers, requirement-to-test traceability, manual curl demo commands, latest results and known gaps |
+| [`docs/demo-script.md`](docs/demo-script.md) | Outline and talking points for the demo video |
 | [`backend/README.md`](backend/README.md) | Backend run options, behaviour notes and code layout |
 | [`frontend/README.md`](frontend/README.md) | Wireframe-to-screen mapping, components and run instructions |
 
@@ -161,21 +165,32 @@ To lint the API spec: `npx @redocly/cli lint docs/openapi.yaml`.
 
 ## Testing
 
+64 automated tests plus a 66-check smoke script. Latest run: **0 failures**. Details are in
+[`docs/testing.md`](docs/testing.md).
+
+| Layer | Tests | Run with |
+|---|---|---|
+| Unit: `PricingServiceTest`, `PaymentSimulatorTest`, `JwtServiceTest`, `MoneyTest` | 30 | `mvn test` |
+| API integration: `ApiIntegrationTest` (journeys and business rules over real HTTP, H2) | 10 | `mvn test` |
+| Validation and error handling: `ValidationAndErrorHandlingTest` | 24 | `mvn test` |
+| Smoke script against a running server | 66 checks | `./scripts/smoke-test.sh` |
+
 ```bash
+# Automated tests
 cd backend
 mvn test
+
+# Smoke test: start the backend, then from the repo root (needs curl and jq)
+cd backend && mvn spring-boot:run -Dspring-boot.run.profiles=h2
+./scripts/smoke-test.sh            # add VERBOSE=1 to print every request and response
 ```
 
-`ApiIntegrationTest` is an end-to-end API test that runs against H2. It covers:
-- guest browsing, search, filter and sort
-- the full journey with a coupon, gift points, payment, cancel and reorder
-- rejection of cancellation after 48 hours
-- reservation and restoration of gift points
-- stock enforcement
-- per-user scoping of orders
-- payment input validation
-- wishlist, writers, addresses and reviews
-- auth validation
+What is verified:
+- **Journeys**: guest browsing, search, filter and sort; cart, coupon, gift points, payment (declined, then successful), cancel with refund, and reorder.
+- **Validation**: every request field rule, malformed JSON, bad query parameters, bad enum values, Luhn and expiry checks on cards, UPI format, and coupon rules. Errors list each broken field in `fieldErrors`.
+- **Error handling**: 400, 401, 404, 405 and 409 all use one JSON error shape, and no response contains a stack trace or exception name.
+- **Security**: missing, garbage and forged tokens on 13 protected endpoints; users cannot read or change each other's orders, addresses or carts; passwords, card numbers and CVVs never appear in a response; a client cannot set its own price.
+- **Business rules**: stock enforcement, the 48-hour cancel window, points reserved, redeemed and restored, tax and delivery maths.
 
 ## How it was built with Bob
 
@@ -184,8 +199,8 @@ Agent mode is Bob's mode for writing and changing code, running builds and tests
 
 | Phase | What was done | Output |
 |---|---|---|
-| 0–1. Analyse | Bob read the wireframes (`Slide-5.png` … `Slide-10.png`). It listed screens, features and entities, and recorded wireframe inconsistencies and assumptions. | `docs/data-model.md` |
-| Requirements | Requirements were reverse-engineered from the wireframes and the use-case slide. | `docs/requirements.md` |
+| 0–1. Analyse | Bob read the wireframes (`Slide-5.png` … `Slide-10.png`). It listed screens, features and entities, and recorded wireframe inconsistencies and assumptions. | `docs/frontend-requirements.md` |
+| Requirements | Requirements were reverse-engineered from the wireframes and the use-case slide. | `docs/backend-requirements.md` |
 | 2. API spec | The OpenAPI spec was generated from the entities and journey, then reviewed and linted with Redocly. | `docs/openapi.yaml`, `redocly.yaml` |
 | 3–5. Backend | Spring Boot code was generated from the spec. This covers entities, repositories, services, controllers, security and Flyway migrations with seed data, plus the business logic: pricing, points, simulated payment, 48-hour cancel, reorder and recommendations. | `backend/` |
 | 6–8. Verify | The project was built and run. `ApiIntegrationTest` was written to check the journey and the business rules. | `ApiIntegrationTest`, `backend/target/surefire-reports` |
@@ -195,8 +210,13 @@ Agent mode is Bob's mode for writing and changing code, running builds and tests
 Working rules followed throughout:
 - Plan first, then implement. Make the smallest change that meets the requirement.
 - Keep the spec, code and tests aligned. Build and test after each generation step.
-- Record assumptions where the slides were ambiguous (PostgreSQL, Java 17, JWT, simulated payment, tax and points rules). They are listed in `PLAN.md` and `docs/data-model.md`.
+- Record assumptions where the slides were ambiguous (PostgreSQL, Java 17, JWT, simulated payment, tax and points rules). They are listed in `PLAN.md` and `docs/frontend-requirements.md`.
 - Review all generated code by hand.
+
+After a review asked for more detail on the API design and on testing, Bob was used again to add
+[`docs/api-guide.md`](docs/api-guide.md), the unit tests, `ValidationAndErrorHandlingTest` and `scripts/smoke-test.sh`.
+It started the app, called the real endpoints to capture the examples in the guide, and ran the tests until they were green.
+Two of the first failures were mistakes in the new tests, not in the application, and they were fixed in the tests.
 
 The repository doesn't contain a custom Bob mode or a prompt log. The agent used was Bob's built-in Agent mode, and
 the plan in `PLAN.md` served as its guide. `PLAN.md` also calls for `docs/prompt-log.md`, an Insomnia collection and

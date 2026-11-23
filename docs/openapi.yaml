@@ -7,7 +7,7 @@ info:
     url: https://www.apache.org/licenses/LICENSE-2.0.html
   description: |
     Backend API for the Book Worm e-bookstore (capstone project).
-    Derived from the wireframes (slides 5-10) and `docs/data-model.md`.
+    Derived from the wireframes (slides 5-10) and `docs/frontend-requirements.md`.
 
     Conventions
     * All money values are INR, serialized as numbers with 2 decimals.

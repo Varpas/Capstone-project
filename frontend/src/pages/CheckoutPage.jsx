@@ -33,17 +33,17 @@ export function CheckoutPage() {
   const [useSavedAddress, setUseSavedAddress] = useState(false);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
 
-  // Address form fields (Slide 8)
+  // Address form fields (Slide 8) - predefined with demo values
   const [addressForm, setAddressForm] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
+    firstName: 'John',
+    lastName: 'Doe',
+    email: 'john.doe@example.com',
     phoneCountryCode: '+91',
-    phone: '',
-    addressLine: '',
-    city: '',
-    state: '',
-    pinCode: '',
+    phone: '9876543210',
+    addressLine: '221B MG Road, Indiranagar',
+    city: 'Bengaluru',
+    state: 'Karnataka',
+    pinCode: '560001',
     country: 'India',
   });
   const [saveAddressToAccount, setSaveAddressToAccount] = useState(true);
@@ -66,10 +66,10 @@ export function CheckoutPage() {
     if (user) {
       setAddressForm((prev) => ({
         ...prev,
-        firstName: prev.firstName || user.firstName || '',
-        lastName: prev.lastName || user.lastName || '',
-        email: prev.email || user.email || '',
-        phone: prev.phone || user.phone?.replace(/^\+91/, '') || '',
+        firstName: user.firstName || prev.firstName,
+        lastName: user.lastName || prev.lastName,
+        email: user.email || prev.email,
+        phone: user.phone?.replace(/^\+91/, '') || prev.phone,
       }));
     }
   }, [user]);
