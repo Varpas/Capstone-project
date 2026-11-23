@@ -1,0 +1,8 @@
+extends:
+  - recommended
+
+rules:
+  # Public parameterless list endpoints (/categories, /publishers) cannot return a 4XX.
+  operation-4xx-response: off
+  # The spec intentionally documents the local development server.
+  no-server-example.com: off

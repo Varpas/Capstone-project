@@ -1,0 +1,39 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Logs
+*.log
+logs/
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+*.swp
+
+# Backend (Java / Maven)
+backend/target/
+*.class
+*.jar
+*.war
+.mvn/wrapper/maven-wrapper.jar
+.classpath
+.project
+.settings/
+
+# Frontend (Node / Vite)
+frontend/node_modules/
+frontend/dist/
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.vite/

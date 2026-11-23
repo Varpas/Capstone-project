@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: bookworm
+      POSTGRES_USER: bookworm
+      POSTGRES_PASSWORD: bookworm
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bookworm -d bookworm"]
+      interval: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/bookworm
+      DB_USER: bookworm
+      DB_PASSWORD: bookworm
+      JWT_SECRET: ${JWT_SECRET:-bookworm-dev-secret-change-me-bookworm-dev-secret}
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build: ./frontend
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+
+volumes:
+  pgdata:
